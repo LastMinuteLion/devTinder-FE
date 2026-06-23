@@ -9,30 +9,57 @@ import { BASE_URL } from "../utils/constants";
 
 const Login = () => {
 
+    const [isLoginForm, setIsLoginForm] = useState(true);
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
-        
-       e.preventDefault();
+    const handleLogin = async (event) => {
+    event.preventDefault();
+    setError("");
 
-       try {
-            const res = await axios.post(BASE_URL + "/login", {
-                emailId: email,
-                password
-            },
+    try {
+      const res = await axios.post(
+        BASE_URL + "/login",
         {
-            withCredentials: true
-        });
-            // console.log(res.data);
-            dispatch(addUser(res.data));
-            return navigate("/");
-       } catch (error) {
-            console.log(error);
-       }
+          emailId: email,
+          password,
+        },
+        { withCredentials: true }
+      );
+      dispatch(addUser(res.data));
+      return navigate("/");
+    } catch (err) {
+      setError(err?.response?.data || "Something went wrong");
     }
+  };
+
+  const handleSignUp = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    try {
+      const res = await axios.post(
+        BASE_URL + "/signup",
+        { firstName, lastName, emailId: email, password },
+        { withCredentials: true }
+      );
+      dispatch(addUser(res.data.data));
+      return navigate("/profile");
+    } catch (err) {
+      setError(err?.response?.data || "Something went wrong");
+    }
+  };
+
+
+    const toggleForm = () => {
+      setIsLoginForm((currentMode) => !currentMode);
+      setError("");
+    };
 
 
 
@@ -70,14 +97,56 @@ const Login = () => {
           <div className="p-6 sm:p-10">
             <div className="mx-auto w-full max-w-md">
               <div className="mb-8">
-                <p className="text-sm font-medium text-primary">Welcome back</p>
-                <h2 className="mt-2 text-3xl font-bold">Login to your account</h2>
+                <p className="text-sm font-medium text-primary">
+                  {isLoginForm ? "Welcome back" : "Join devTinder"}
+                </p>
+                <h2 className="mt-2 text-3xl font-bold">
+                  {isLoginForm ? "Login to your account" : "Create your account"}
+                </h2>
                 <p className="mt-2 text-sm text-base-content/70">
-                  Pick up where you left off.
+                  {isLoginForm
+                    ? "Pick up where you left off."
+                    : "Create a profile and start meeting developers."}
                 </p>
               </div>
 
-              <form className="space-y-5" onSubmit={handleLogin}>
+              <form className="space-y-5" onSubmit={isLoginForm ? handleLogin : handleSignUp}>
+                {!isLoginForm && (
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <div className="form-control">
+                      <label className="label" htmlFor="firstName">
+                        <span className="label-text font-medium">First name</span>
+                      </label>
+                      <input
+                        id="firstName"
+                        type="text"
+                        className="input input-bordered w-full"
+                        placeholder="First name"
+                        autoComplete="given-name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label" htmlFor="lastName">
+                        <span className="label-text font-medium">Last name</span>
+                      </label>
+                      <input
+                        id="lastName"
+                        type="text"
+                        className="input input-bordered w-full"
+                        placeholder="Last name"
+                        autoComplete="family-name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="form-control">
                   <label className="label" htmlFor="email">
                     <span className="label-text font-medium">Email address</span>
@@ -141,7 +210,7 @@ const Login = () => {
                       id="password"
                       type="password"
                       placeholder="Enter your password"
-                      autoComplete="current-password"
+                      autoComplete={isLoginForm ? "current-password" : "new-password"}
                       minLength="8"
                       required
                       value={password}
@@ -152,17 +221,22 @@ const Login = () => {
                     Password must be at least 8 characters.
                   </p>
                 </div>
+                {error && <p className="text-red-500 text-sm">{error}</p>}
 
                 <button className="btn btn-primary w-full" type="submit">
-                  Login
+                  {isLoginForm ? "Login" : "Sign Up"}
                 </button>
               </form>
 
               <p className="mt-8 text-center text-sm text-base-content/70">
-                New here?{' '}
-                <a className="link link-primary font-medium no-underline hover:underline">
-                  Create an account
-                </a>
+                {isLoginForm ? "New here?" : "Already have an account?"}{' '}
+                <button
+                  className="link link-primary font-medium no-underline hover:underline"
+                  type="button"
+                  onClick={toggleForm}
+                >
+                  {isLoginForm ? "Sign Up" : "Login"}
+                </button>
               </p>
             </div>
           </div>
